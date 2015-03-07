@@ -1,8 +1,6 @@
-// package fschange
-package main
+package fschange
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -109,26 +107,4 @@ func (w *Watcher) watch() {
 			w.Errors <- err
 		}
 	}
-}
-
-func main() {
-	sinceTime := time.Now().Add(-time.Hour * 24)
-	w, _ := NewWatcher(sinceTime)
-
-	done := make(chan bool)
-
-	go func() {
-		for {
-			select {
-			case event := <-w.Events:
-				fmt.Println(event)
-			case err := <-w.Errors:
-				fmt.Println(err)
-			}
-		}
-	}()
-
-	w.Add("../")
-	<-done
-	w.Close()
 }
