@@ -22,7 +22,18 @@ type Watcher struct {
 
 type Event struct {
 	Name string
+	Op   Op
 }
+
+type Op uint32
+
+const (
+	Create Op = 1 << iota
+	Write
+	Remove
+	Rename
+	Chmod
+)
 
 func NewWatcher(since time.Time) (*Watcher, error) {
 	watcher, err := fsnotify.NewWatcher()
@@ -80,7 +91,7 @@ func (w *Watcher) walkFunc(path string, info os.FileInfo, err error) error {
 			w.Errors <- err
 			return err
 		}
-		w.Events <- Event{absPath}
+		w.Events <- Event{absPath, Create}
 	}
 
 	return nil
@@ -90,7 +101,10 @@ func (w *Watcher) watch() {
 	for {
 		select {
 		case event := <-w.watcher.Events:
-			w.Events <- Event{event.Name}
+			w.Events <- Event{
+				Name: event.Name,
+				Op:   Op(event.Op),
+			}
 		case err := <-w.watcher.Errors:
 			w.Errors <- err
 		}
