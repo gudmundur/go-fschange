@@ -10,6 +10,7 @@ import (
 
 type Watcher struct {
 	Since time.Time
+	until time.Time
 
 	Events chan Event
 	Errors chan error
@@ -22,6 +23,7 @@ type Event struct {
 func NewWatcher(since time.Time) (*Watcher, error) {
 	w := &Watcher{
 		Since:  since,
+		until:  time.Now(),
 		Events: make(chan Event),
 		Errors: make(chan error),
 	}
@@ -49,7 +51,8 @@ func (w *Watcher) walkFunc(path string, info os.FileInfo, err error) error {
 		return err
 	}
 
-	if w.Since.Before(info.ModTime()) {
+	modTime := info.ModTime()
+	if modTime.After(w.Since) && modTime.Before(w.until) {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
 			w.Errors <- err
