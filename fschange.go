@@ -1,3 +1,4 @@
+// Package fschange notifies of file changes since provided time
 package fschange
 
 import (
@@ -8,6 +9,7 @@ import (
 	"gopkg.in/fsnotify.v1"
 )
 
+// Watcher watches a set of directories, delivering events to a channel.
 type Watcher struct {
 	Since time.Time
 	until time.Time
@@ -18,13 +20,16 @@ type Watcher struct {
 	watcher *fsnotify.Watcher
 }
 
+// Event represents a single file system notification.
 type Event struct {
 	Name string
 	Op   Op
 }
 
+// Op describes a set of file operations.
 type Op uint32
 
+// These are the generalized file operations that can trigger a notification.
 const (
 	Create Op = 1 << iota
 	Write
@@ -33,6 +38,7 @@ const (
 	Chmod
 )
 
+// NewWatcher establishes a new file system watcher and notifies of any changes after since.
 func NewWatcher(since time.Time) (*Watcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -52,11 +58,13 @@ func NewWatcher(since time.Time) (*Watcher, error) {
 	return w, nil
 }
 
+// Add starts watching the directory recursively.
 func (w *Watcher) Add(path string) error {
 	w.walk(path)
 	return nil
 }
 
+// Closes all watches and channels
 func (w *Watcher) Close() error {
 	w.watcher.Close()
 	close(w.Events)
